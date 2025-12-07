@@ -26,9 +26,9 @@ python3 -m venv venv
 source venv/bin/activate
 
 
-#Windows (PowerShell):
+#Windows (bash):
 
-venv\Scripts\Activate
+./venv/Scripts/Activate
 
 #You should see (venv) appear before your terminal prompt.
 ```
