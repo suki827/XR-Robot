@@ -1,20 +1,18 @@
-import cv2
-import json
-import math
-import numpy as np
 import os
-import requests
 import threading
 import time
-import torch
-import yaml
 from typing import Optional
+
+import cv2
+import numpy as np
+import requests
+import torch
 from ultralytics import YOLO
 
-from domain.ActionState import action_state, ActionState
 from domain.StreamCamState import StreamCamState
 from domain.StreamState import StreamState
 from mq.MQTTPublisher import create_default_publisher
+from src.domain.ActionState import action_state
 
 try:
     publisher = create_default_publisher(brokers=["192.168.0.101"], topic="jetauto/cmd")
@@ -24,12 +22,12 @@ except Exception as e:
 
 MODEL_PATH = r"src/yolo_model/yolov8s-worldv2.pt"
 
-# 加载模型
+
 if not os.path.isfile(MODEL_PATH):
     raise FileNotFoundError(f"can not find file: {MODEL_PATH}")
 print(f"loading model: {MODEL_PATH}")
 
-# 1. 选 device
+
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 yolo_model = YOLO(MODEL_PATH)
 
@@ -46,7 +44,7 @@ img_size = (640, 480)
 FPS = 20
 JPEG_QUALITY = 80
 
-# MJPEG 拉流地址
+# MJPEG
 Push_URL = "http://192.168.0.100:8000/push/detect_cam"
 
 
@@ -125,7 +123,7 @@ IMG_SIZE = 640
 CONF_THRES = 0.3
 DEVICE = "0"
 
-# ====================================检测球体==========================================
+# ====================================detect object==========================================
 def run_detect_script(pull_state:StreamState,is_yolo:bool):
 
     push_state = StreamCamState()
@@ -152,10 +150,6 @@ def run_detect_script(pull_state:StreamState,is_yolo:bool):
 
         return  results
 
-
-
-
-
     try:
         while True:
             in_frame = get_opencv_frame(pull_state)
@@ -164,16 +158,11 @@ def run_detect_script(pull_state:StreamState,is_yolo:bool):
                 if is_detect:
                     yolo_start = time.perf_counter()
                     res = detect_by_yolo(in_frame)
-                    yolo_time = (time.perf_counter() - yolo_start) * 1000  # 毫秒
+                    yolo_time = (time.perf_counter() - yolo_start) * 1000
                     print(f"[YOLO] Inference time: {yolo_time:.2f} ms")
-                    # YOLO 返回一个 list，所以取第一项
-                    annotated = res[0].plot(conf=False)  # 带框的 BGR 图像
-                    push_state.latest_frame = annotated
-                    # if class_len == 1:
-                    #     count = len(res[0].boxes)
-                    #     print("检测到目标数量:", count)
-                    #     voice_text = f"I detect {count} {detectClasses[0]}"
 
+                    annotated = res[0].plot(conf=False)
+                    push_state.latest_frame = annotated
 
                     cv2.imshow("YOLO Stream", annotated)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
