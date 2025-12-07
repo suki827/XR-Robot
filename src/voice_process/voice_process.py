@@ -1,0 +1,192 @@
+import json
+import time
+import whisper
+import io
+import numpy as np
+import soundfile as sf
+import librosa
+
+from src.domain.ActionState import action_state
+from src.mq.MQTTPublisher import create_default_publisher
+
+# loading whisper model when run this script (small medium)
+model = whisper.load_model("medium", device="cuda")
+
+try:
+    publisher_human = create_default_publisher(brokers=["192.168.0.101"], topic="tony_one/cmd")
+except Exception as e:
+    print(e)
+WHISPER_SR = 16000  # Whisper Expected sampling rate
+
+def bytes_to_whisper_audio(audio_bytes: bytes) -> np.ndarray:
+
+    # 1.
+    data, sr = sf.read(io.BytesIO(audio_bytes))   # data: np.ndarray
+
+    # 2.
+    if data.ndim > 1:
+        data = np.mean(data, axis=1)
+
+    # 3.
+    if sr != WHISPER_SR:
+        data = librosa.resample(data, orig_sr=sr, target_sr=WHISPER_SR)
+
+    # 4.
+    data = data.astype(np.float32)
+
+    return data
+
+def transcribe(audio_path: str) -> str:
+    """
+    输入音频文件路径，返回识别文本
+    """
+    result = model.transcribe(
+        audio_path,
+        language='en',  # en
+        task='transcribe',  # no translate
+        temperature=0,
+        beam_size=5,
+        best_of=5,
+        fp16=True,
+        patience=1.0,
+        condition_on_previous_text=True,
+    )
+
+    return result["text"]
+
+def transcribe_audio_bytes(audio_bytes: bytes) -> str:
+    total_start = time.perf_counter()
+    # 1️⃣
+    data, sr = sf.read(io.BytesIO(audio_bytes))  # data: np.ndarray
+
+    # 2️⃣
+    if data.ndim > 1:
+        data = np.mean(data, axis=1)
+
+    # 3️⃣
+    if sr != WHISPER_SR:
+        data = librosa.resample(data, orig_sr=sr, target_sr=WHISPER_SR)
+
+    # 4️⃣ 转成 float32
+    audio_np = data.astype(np.float32)
+
+    # 5
+    whisper_start = time.perf_counter()
+    result = model.transcribe(
+        audio_np,
+        language='en',
+        task='transcribe',
+        temperature=0,
+        beam_size=5,
+        best_of=5,
+        fp16=True,
+        patience=1.0,
+        condition_on_previous_text=True,
+    )
+    whisper_time = (time.perf_counter() - whisper_start) * 1000  # 毫秒
+    print(f"[Whisper] Inference time: {whisper_time:.2f} ms")
+    text = result.get("text", "")
+    print("recognize text print=======:", text)
+    text = text.lower()
+    if text is not None:
+        # 执行逻辑判断
+        select_cmd_object(text)
+    # 可选：记录整个函数耗时
+    total_time = (time.perf_counter() - total_start) * 1000
+    print(f"[transcribe_audio_bytes] Total function time: {total_time:.2f} ms")
+    return text
+
+         #     }
+forward_commands = ['forward','move forward','go forward','walk forward','advance','move ahead','go ahead','walk ahead']
+backward_commands = ['backward','move backward','go backward','walk backward','retreat','move back','go back','walk back']
+left_commands = ['left','move left','go left','walk left','turn left']
+right_commands = ['right','move right','go right','walk right','turn right']
+rotate_commands = ['rotate left','rotate right']
+pick_commands = ['pick up','pick ball','picking ball','pick the ball']
+wave_commands = ['wave','play wave']
+dance_commands = ['dance']
+start_commands = ['start detect','activate detect']
+stop_commands = ['stop detect','deactivate detect']
+detect_commands = ['detect','find','search']
+
+
+
+
+def parse_detect_classes(text: str) -> list[str]:
+    text = text.strip()
+
+    # 1. 去掉 detect（忽略大小写）
+    if text.lower().startswith("detect "):
+        text = text[7:].strip()
+    if text.lower().startswith("search "):
+        text = text[7:].strip()
+    if text.lower().startswith("find "):
+        text = text[5:].strip()
+    # 2. 按 and 分割（忽略大小写），得到列表
+    parts = [x.strip() for x in text.split("and")]
+
+    # 3. 过滤掉空项
+    parts = [p for p in parts if p]
+    print(parts)
+
+    return parts
+
+
+def human_action(text):
+    text = text.lower()
+    print(text)
+    action_name = ''
+    payload = {}
+    if any(cmd in text for cmd in forward_commands):
+        action_name = 'forward'
+    elif any(cmd in text for cmd in backward_commands):
+        action_name = 'backward'
+    elif any(cmd in text for cmd in left_commands):
+        action_name = 'left'
+    elif any(cmd in text for cmd in right_commands):
+        action_name = 'right'
+    elif any(cmd in text for cmd in wave_commands):
+        action_name = 'wave'
+    elif any(cmd in text for cmd in dance_commands):
+        action_name = 'dance'
+    elif any(cmd in text for cmd in start_commands):
+        print('start detect')
+        action_state.set_start_detect(True)
+    elif any(cmd in text for cmd in stop_commands):
+        print('stop detect')
+        action_state.set_start_detect(False)
+        detect_class = ['cup', 'banana', 'ping pong ball', 'sports ball', 'bottle', 'apple']
+        action_state.set_detect_class(detect_class)
+
+    elif any(cmd in text for cmd in detect_commands):
+        detect_detect = parse_detect_classes(text)
+        action_state.set_detect_class(detect_detect)
+
+
+    if action_name !='':
+
+        payload = {
+            "type": "cmd",
+            "data": action_name
+        }
+        if payload['data'] is not None:
+            human_payload = json.dumps(payload)
+            publisher_human.publish(human_payload)
+
+
+
+
+
+def select_cmd_object(text: str) -> str:
+    if text is  None:
+        return ""
+    else:
+        human_action(text)
+
+
+def main():
+    audio_path = r'D:\programs\python_projects\quest_robots\audio\record.wav'
+    res  = transcribe(audio_path)
+    print("recognize result：" + res)
+if __name__ == "__main__":
+    main()
