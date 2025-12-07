@@ -28,7 +28,7 @@ source venv/bin/activate
 
 #Windows (PowerShell):
 
-pip install --upgrade pip setuptools wheel
+venv\Scripts\Activate
 
 #You should see (venv) appear before your terminal prompt.
 ```
