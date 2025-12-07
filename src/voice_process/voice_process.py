@@ -10,7 +10,8 @@ from src.domain.ActionState import action_state
 from src.mq.MQTTPublisher import create_default_publisher
 
 # loading whisper model when run this script (small medium)
-model = whisper.load_model("medium", device="cuda")
+
+model = whisper.load_model("medium")
 
 try:
     publisher_human = create_default_publisher(brokers=["192.168.0.101"], topic="tony_one/cmd")
@@ -20,26 +21,24 @@ WHISPER_SR = 16000  # Whisper Expected sampling rate
 
 def bytes_to_whisper_audio(audio_bytes: bytes) -> np.ndarray:
 
-    # 1.
+
     data, sr = sf.read(io.BytesIO(audio_bytes))   # data: np.ndarray
 
-    # 2.
+
     if data.ndim > 1:
         data = np.mean(data, axis=1)
 
-    # 3.
+
     if sr != WHISPER_SR:
         data = librosa.resample(data, orig_sr=sr, target_sr=WHISPER_SR)
 
-    # 4.
+
     data = data.astype(np.float32)
 
     return data
 
 def transcribe(audio_path: str) -> str:
-    """
-    输入音频文件路径，返回识别文本
-    """
+
     result = model.transcribe(
         audio_path,
         language='en',  # en
@@ -56,18 +55,18 @@ def transcribe(audio_path: str) -> str:
 
 def transcribe_audio_bytes(audio_bytes: bytes) -> str:
     total_start = time.perf_counter()
-    # 1️⃣
+
     data, sr = sf.read(io.BytesIO(audio_bytes))  # data: np.ndarray
 
-    # 2️⃣
+
     if data.ndim > 1:
         data = np.mean(data, axis=1)
 
-    # 3️⃣
+
     if sr != WHISPER_SR:
         data = librosa.resample(data, orig_sr=sr, target_sr=WHISPER_SR)
 
-    # 4️⃣ 转成 float32
+
     audio_np = data.astype(np.float32)
 
     # 5
@@ -89,9 +88,7 @@ def transcribe_audio_bytes(audio_bytes: bytes) -> str:
     print("recognize text print=======:", text)
     text = text.lower()
     if text is not None:
-        # 执行逻辑判断
         select_cmd_object(text)
-    # 可选：记录整个函数耗时
     total_time = (time.perf_counter() - total_start) * 1000
     print(f"[transcribe_audio_bytes] Total function time: {total_time:.2f} ms")
     return text
@@ -122,10 +119,8 @@ def parse_detect_classes(text: str) -> list[str]:
         text = text[7:].strip()
     if text.lower().startswith("find "):
         text = text[5:].strip()
-    # 2. 按 and 分割（忽略大小写），得到列表
     parts = [x.strip() for x in text.split("and")]
 
-    # 3. 过滤掉空项
     parts = [p for p in parts if p]
     print(parts)
 

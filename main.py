@@ -2,13 +2,12 @@ import asyncio
 import os
 import threading
 import time
-from typing import Dict
-
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from pydantic import BaseModel
+from typing import Dict
 
 from src.detect_scripyts.sub_server import run_detect_script
 from src.domain.StreamState import StreamState
@@ -34,8 +33,7 @@ app = FastAPI(title="Video Push/Stream Relay")
 # ==============================
 try:
     # Connect to the MQTT broker that controls the robot
-    # publisher = create_default_publisher(brokers=["192.168.0.101"], topic="tony_one/cmd")
-    publisher = create_default_publisher(brokers=["192.168.0.102"], topic="jetauto/cmd")
+    publisher = create_default_publisher(brokers=["192.168.0.101"], topic="tony_one/cmd")
 except Exception as e:
     print(e)
 
@@ -72,7 +70,7 @@ def get_stream(stream_id: str) -> StreamState:
 # ==============================
 # Background detection thread
 # ==============================
-def detect_ball():
+def sub_server():
     print('start detect ball')
     """
     Background thread that receives frames from `usb_cam`
@@ -137,7 +135,6 @@ async def receive_cmd(command: Cmd):
     str_cmd = command.cmd
 
     # MQTT publish command to Tony robot
-    # send_move_from_quest2Tony(publisher, str_cmd)
     send_move_from_quest(publisher, str_cmd)
     exec_time = (time.perf_counter() - start_time) * 1000  #  ms
     print(f"[receive_cmd] Execution time: {exec_time:.2f} ms")
@@ -213,11 +210,9 @@ async def mjpeg_stream(stream_id: str):
                 except asyncio.TimeoutError:
                     pass
 
-                # --------------------------
-                # 发送最新 JPEG 视频帧
-                # --------------------------
+
                 if st.latest_frame:
-                    # --- 推流帧输出 ---
+
                     yield (
                         f"--{BOUNDARY}\r\n"
                         "Content-Type: image/jpeg\r\n"
@@ -226,7 +221,7 @@ async def mjpeg_stream(stream_id: str):
 
                     last_sent = time.time()
 
-                    # ------------- 统计 FPS -------------
+                    # -------------  FPS -------------
                     fps_counter += 1
                     now = time.time()
                     if now - fps_last_time >= 1.0:
@@ -235,9 +230,7 @@ async def mjpeg_stream(stream_id: str):
                         fps_last_time = now
                     # -----------------------------------
 
-                # --------------------------
-                # Heartbeat：没帧时发心跳
-                # --------------------------
+
                 else:
                     if time.time() - last_sent >= heartbeat_interval:
                         yield (
@@ -261,7 +254,7 @@ async def mjpeg_stream(stream_id: str):
 # ==============================
 if __name__ == "__main__":
     # Start background detection thread   can comment out this line if it's not needed.”
-    t = threading.Thread(target=detect_ball, daemon=True)
+    t = threading.Thread(target=sub_server, daemon=True)
     t.start()
 
     # Run FastAPI server
