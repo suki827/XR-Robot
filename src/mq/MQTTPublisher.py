@@ -89,22 +89,13 @@ def create_default_publisher(
     """
     if brokers is None:
         # 默认 broker 列表，你可以按需要改
-        brokers = ["192.168.0.102"]
+        brokers = ["192.168.0.101"]
     return MQTTPublisher(brokers=brokers, port=port, topic=topic, keepalive=keepalive)
 
 
 def send_move_from_quest2Tony(default_publisher: MQTTPublisher = None,cmd: str = None) :
-    cmd_type = 'move'
-    data = None
+
     if cmd is not None:
-        # if any(cmd in text for cmd in forward_commands):
-        #     action_name = 'forward'
-        # elif any(cmd in text for cmd in backward_commands):
-        #     action_name = 'backward'
-        # elif any(cmd in text for cmd in left_commands):
-        #     action_name = 'left'
-        # elif any(cmd in text for cmd in right_commands):
-        #     action_name = 'right'
 
         action_name = ''
         if cmd =='forward':
@@ -115,6 +106,10 @@ def send_move_from_quest2Tony(default_publisher: MQTTPublisher = None,cmd: str =
             action_name = 'left'
         elif cmd =='right':
             action_name = 'right'
+        elif cmd == 'turn_left':
+            action_name = 'turn_left'
+        elif cmd == 'turn_right':
+            action_name = 'turn_right'
         elif cmd =='wave':
             action_name = 'wave'
         elif cmd =='dance':
@@ -124,7 +119,7 @@ def send_move_from_quest2Tony(default_publisher: MQTTPublisher = None,cmd: str =
 
         elif cmd =='deactivate':
             action_state.set_start_detect(False)
-            action_state.set_detect_class(['cup', 'banana', 'ping pong ball', 'sports ball', 'bottle', 'apple'])
+            action_state.set_detect_class(['cup', 'banana', 'ping pong ball', 'sports ball', 'bottle', 'apple','mobile phone'])
 
 
         if action_name != '':
@@ -136,40 +131,6 @@ def send_move_from_quest2Tony(default_publisher: MQTTPublisher = None,cmd: str =
 
 
 
-
-
-
-#发送指令给机器人
-def send_move_from_quest(default_publisher: MQTTPublisher = None,cmd: str = None) :
-    cmd_type = 'move'
-    data = None
-    if cmd is not None:
-        if cmd =='forward':
-            data = [0.2,0,1]
-        elif cmd =='backward':
-            data = [-0.2, 0, 1]
-        elif cmd =='left':
-            data = [0, 0.2, 1]
-        elif cmd =='right':
-            data = [0, -0.2, 1]
-        elif cmd =='rotate_left':
-            data = [0, 0, -1]
-            cmd_type = 'rotate'
-        elif cmd =='rotate_right':
-            data = [0, 0, 1]
-            cmd_type = 'rotate'
-        # elif cmd =='pick_up':
-            # cmd_type = 'cmd'
-            # data = 'pick_place_ball_big_craw'
-
-        payload = {
-            'type':  cmd_type,
-            'data': data
-        }
-        default_publisher.publish(json.dumps(payload))
-
-    if cmd is not None and cmd =='pick_up':
-        action_state.set_picking(True)
 
 
 

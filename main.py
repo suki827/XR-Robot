@@ -2,16 +2,17 @@ import asyncio
 import os
 import threading
 import time
+from typing import Dict
+
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from pydantic import BaseModel
-from typing import Dict
 
 from src.detect_scripyts.sub_server import run_detect_script
 from src.domain.StreamState import StreamState
-from src.mq.MQTTPublisher import create_default_publisher, send_move_from_quest
+from src.mq.MQTTPublisher import create_default_publisher, send_move_from_quest2Tony
 from src.voice_process.voice_process import transcribe_audio_bytes
 
 
@@ -76,8 +77,8 @@ def sub_server():
     Background thread that receives frames from `usb_cam`
     and runs your object-detection script.
     """
-    # cam_state = get_stream('tony_cam')
-    cam_state = get_stream('usb_cam')
+
+    cam_state = get_stream('tony_cam')
     run_detect_script(cam_state,is_yolo=True)
 
 
@@ -135,7 +136,7 @@ async def receive_cmd(command: Cmd):
     str_cmd = command.cmd
 
     # MQTT publish command to Tony robot
-    send_move_from_quest(publisher, str_cmd)
+    send_move_from_quest2Tony(publisher, str_cmd)
     exec_time = (time.perf_counter() - start_time) * 1000  #  ms
     print(f"[receive_cmd] Execution time: {exec_time:.2f} ms")
     return {"status": "ok", "received": str_cmd}
@@ -145,8 +146,8 @@ async def receive_cmd(command: Cmd):
 # Audio ASR endpoint
 # Quest3/Unity → PC → Whisper
 # ==============================
-audio_path = r'D:\programs\python_projects\quest_robots\audio'
-SAVE_PATH = os.path.join(audio_path, "record.wav")
+# audio_path = r'D:\programs\python_projects\quest_robots\audio'
+# SAVE_PATH = os.path.join(audio_path, "record.wav")
 
 
 @app.post("/asr")
@@ -173,7 +174,6 @@ async def asr_audio(file: UploadFile = File(...)):
     return {
         "status": "ok",
         "msg": "receive success",
-        "audio_path": audio_path,
         "text": result_text,
     }
 

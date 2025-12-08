@@ -96,8 +96,10 @@ def transcribe_audio_bytes(audio_bytes: bytes) -> str:
          #     }
 forward_commands = ['forward','move forward','go forward','walk forward','advance','move ahead','go ahead','walk ahead']
 backward_commands = ['backward','move backward','go backward','walk backward','retreat','move back','go back','walk back']
-left_commands = ['left','move left','go left','walk left','turn left']
-right_commands = ['right','move right','go right','walk right','turn right']
+move_left_commands = ['move left','go left','walk left']
+move_right_commands = ['move right','go right','walk right']
+turn_left_commands = ['turn left']
+turn_right_commands = ['turn right']
 rotate_commands = ['rotate left','rotate right']
 pick_commands = ['pick up','pick ball','picking ball','pick the ball']
 wave_commands = ['wave','play wave']
@@ -105,6 +107,7 @@ dance_commands = ['dance']
 start_commands = ['start detect','activate detect']
 stop_commands = ['stop detect','deactivate detect']
 detect_commands = ['detect','find','search']
+
 
 
 
@@ -136,10 +139,14 @@ def human_action(text):
         action_name = 'forward'
     elif any(cmd in text for cmd in backward_commands):
         action_name = 'backward'
-    elif any(cmd in text for cmd in left_commands):
+    elif any(cmd in text for cmd in move_left_commands):
         action_name = 'left'
-    elif any(cmd in text for cmd in right_commands):
+    elif any(cmd in text for cmd in move_right_commands):
         action_name = 'right'
+    elif any(cmd in text for cmd in turn_left_commands):
+        action_name = 'turn_left'
+    elif any(cmd in text for cmd in turn_right_commands):
+        action_name = 'turn_right'
     elif any(cmd in text for cmd in wave_commands):
         action_name = 'wave'
     elif any(cmd in text for cmd in dance_commands):
