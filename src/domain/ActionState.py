@@ -7,7 +7,8 @@ from typing import List
 class ActionState:
     picking: bool = False          # 是否开始检测
     start_detect: bool = False
-    detect_class = ['cup','banana','ping pong ball','sports ball','apple','mobile phone']# 你可以扩展：例如 "move" / "rotate" / "cmd"
+    stable_detect: bool = False
+    detect_class = ['banana', 'apple', 'knife', 'teddy bear', 'bottle', 'chair', 'bottle', 'cup', 'spoon', 'book', 'fork', 'ball', 'hand bag','scissors']
     _lock: Lock = field(default_factory=Lock, repr=False)
 
     def set_picking(self, value: bool):
@@ -25,6 +26,14 @@ class ActionState:
     def get_start_detect(self) -> bool:
         with self._lock:
             return self.start_detect
+
+    def set_stable_detect(self, value: bool):
+        with self._lock:
+            self.stable_detect = value
+
+    def get_stable_detect(self) -> bool:
+        with self._lock:
+            return self.stable_detect
 
     def set_detect_class(self, detect_class: list[str]):
         with self._lock:

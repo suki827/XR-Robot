@@ -117,9 +117,12 @@ def send_move_from_quest2Tony(default_publisher: MQTTPublisher = None,cmd: str =
         elif cmd =='activate':
             action_state.set_start_detect(True)
 
+
         elif cmd =='deactivate':
+
+            l = ['banana', 'apple', 'knife', 'teddy bear', 'bottle', 'chair', 'bottle', 'cup', 'spoon', 'book', 'fork', 'ball', 'hand bag','scissors']
+            action_state.set_detect_class(l)
             action_state.set_start_detect(False)
-            action_state.set_detect_class(['cup', 'banana', 'ping pong ball', 'sports ball', 'bottle', 'apple','mobile phone'])
 
 
         if action_name != '':

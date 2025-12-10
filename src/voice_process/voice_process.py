@@ -156,9 +156,11 @@ def human_action(text):
         action_state.set_start_detect(True)
     elif any(cmd in text for cmd in stop_commands):
         print('stop detect')
-        action_state.set_start_detect(False)
-        detect_class = ['cup', 'banana', 'ping pong ball', 'sports ball', 'bottle', 'apple']
+
+        detect_class = ['banana', 'apple', 'knife', 'teddy bear', 'bottle', 'chair', 'bottle', 'cup', 'spoon', 'book', 'fork', 'ball', 'hand bag','scissors']
+
         action_state.set_detect_class(detect_class)
+        action_state.set_start_detect(False)
 
     elif any(cmd in text for cmd in detect_commands):
         detect_detect = parse_detect_classes(text)

@@ -72,7 +72,6 @@ def get_stream(stream_id: str) -> StreamState:
 # Background detection thread
 # ==============================
 def sub_server():
-    print('start detect ball')
     """
     Background thread that receives frames from `usb_cam`
     and runs your object-detection script.

@@ -34,7 +34,8 @@ This guide covers:
 #### ethernet
 * your laptop can share network to raspberry pi and The Ethernet gateway will become 192.168.137.1. 
 
-* Then use an SSH client to connect to the Raspberry Pi via 192.168.137.165.
+* Then use an SSH client to connect to the Raspberry Pi via 192.168.137.165.  
+* username: pi  password:raspberrypi
 
 
 ### **Option 3: Device networking
