@@ -343,18 +343,17 @@ def run_detect_script_new(pull_state: StreamState, is_yolo: bool):
                         (0, 255, 0),
                         2,
                     )
-
-
-
-
-
                     cv2.imshow("YOLO Stream", annotated)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
                 else:
                     # 未开启检测，直接透传
-                    push_state.latest_frame = in_frame
+                    if in_frame is not None:
+                        # cv2.imshow("YOLO Stream", in_frame)
+                        # if cv2.waitKey(1) & 0xFF == ord('q'):
+                        #     break
+                        push_state.latest_frame = in_frame
 
     except KeyboardInterrupt:
         print("\n[Main] Exit by user.")

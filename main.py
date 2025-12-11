@@ -10,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from pydantic import BaseModel
 
-from src.detect_scripyts.sub_server import run_detect_script
+from src.detect_scripyts.sub_server import run_detect_script, run_detect_script_new
+from src.domain.ActionState import action_state
 from src.domain.StreamState import StreamState
 from src.mq.MQTTPublisher import create_default_publisher, send_move_from_quest2Tony
 from src.voice_process.voice_process import transcribe_audio_bytes
@@ -78,7 +79,8 @@ def sub_server():
     """
 
     cam_state = get_stream('tony_cam')
-    run_detect_script(cam_state,is_yolo=True)
+    # run_detect_script(cam_state,is_yolo=True)
+    run_detect_script_new(cam_state,is_yolo=True)
 
 
 # ==============================
@@ -118,6 +120,8 @@ async def push_frame(stream_id: str, request: Request):
     st.frame_event = asyncio.Event()
 
     return {"ok": True, "stream_id": stream_id, "ts": st.latest_ts}
+
+
 
 
 # ==============================
@@ -175,7 +179,21 @@ async def asr_audio(file: UploadFile = File(...)):
         "msg": "receive success",
         "text": result_text,
     }
+@app.get("/detect/{name}")
+async def set_detect(name: str):
+    d_name = name
 
+    if d_name =='start':
+        action_state.set_start_detect(True)
+    elif d_name =='stop':
+        action_state.set_start_detect(False)
+    else:
+        action_state.set_detect_class([d_name])
+    return {
+        "status": "ok",
+        "msg": "receive success",
+
+    }
 
 # ==============================
 # MJPEG streaming endpoint
