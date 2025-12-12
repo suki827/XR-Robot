@@ -26,10 +26,22 @@ To prevent device IP address changes, it is recommended to assign a static IP ad
 An automatic WiFi connection script is prepared in tonypi:
 tonypi 中已准备自动连接 WiFi 脚本：
 
+**Connect to Raspberry Pi AP First / 先连接树莓派AP**
+   - **SSID**: HW-9E00C3A0
+   - **Password / 密码**: hiwonder
+**SSH Login / SSH 登录**
+   ```bash
+   ssh pi@192.168.149.1
+   
+   pwd raspberrypi
+   ```
+
+
 - **Script Name / 脚本名称**: connect_wifi_static_ip.sh
 - **Usage Scenario / 使用场景**:
   - Normally, the device will automatically connect to WiFi via networkmanager
     正常情况下，设备会通过 networkmanager 自动连接 WiFi
   - When automatic connection fails, you can manually run this script
     当自动连接失败时，可手动运行此脚本
+
 
