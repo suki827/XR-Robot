@@ -14,7 +14,7 @@ from src.detect_scripyts.sub_server import run_detect_script, run_detect_script_
 from src.domain.ActionState import action_state
 from src.domain.StreamState import StreamState
 from src.mq.MQTTPublisher import create_default_publisher, send_move_from_quest2Tony
-from src.voice_process.voice_process import transcribe_audio_bytes
+from src.voice_process.voice_process import transcribe_audio_bytes, transcribe_audio_bytes_new
 
 
 # Local modules
@@ -170,7 +170,8 @@ async def asr_audio(file: UploadFile = File(...)):
     # print(f"Saved audio to {SAVE_PATH}, size = {len(data)} bytes")
 
     # Run Whisper / ASR model
-    result_text = transcribe_audio_bytes(data)
+    # result_text = transcribe_audio_bytes(data) # dont use vad
+    result_text = transcribe_audio_bytes_new(data) #use vad
     print("ASR detected text: " + result_text)
     exec_time = (time.perf_counter() - start_time) * 1000  # ms
     print(f"[voice process] Execution time: {exec_time:.2f} ms")
